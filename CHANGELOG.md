@@ -2,6 +2,38 @@
 
 All notable changes to jcodemunch-mcp are documented here.
 
+## [1.108.10] — 2026-05-15 — schema budget cleanup (post-v1.108.0/v1.108.6 drift)
+
+Schema-budget regression caught after v1.108.9 ship. `core_compact` had
+drifted from 3978 to 4180 tokens, breaking `test_schema_tokens_within_baseline_tolerance`
+(5% drift guardrail) and putting the v2 success criterion (`core_compact <= 4000`)
+out of reach.
+
+Diagnosis: 95% of the +202-token drift came from `index_folder`, which
+grew from 213 to 406 tokens between v1.108.0 (added the `paths` arg) and
+v1.108.6 (added the `identity_mode` arg). The new arg descriptions had
+absorbed use-case prose ("e.g. source files git just touched, the
+changeset for a PR, or an rg / fd match list") that belongs in README,
+not in tool schema — every MCP client paid that token cost on every
+`tools/list` call.
+
+Trims:
+- `index_folder` and `index_file` descriptions: dropped diagnostic-hint
+  prose and the env-var name list from `use_ai_summaries` (provider list
+  is config detail, not call-time contract).
+- `paths` arg: dropped the use-case bullet list; kept the contract
+  ("skips the walk; directories recurse; walk-path validation applies").
+- `identity_mode` arg: condensed the three-mode description.
+- `extra_ignore_patterns`, `follow_symlinks`, `incremental`: minor
+  tightening.
+
+Result: `core_compact` is 3977 tokens (one below the original 3978
+baseline, and 23 below the v2 success-criterion line). Other profiles
+also shrunk; baseline updated for all six (`schema_baseline.json`).
+
+No behavioral changes. No tool signatures changed. Pure description
+shrinkage.
+
 ## [1.108.9] — 2026-05-14 — escape hatch for the `_UNDISABLEABLE_TOOLS` safety net (#299)
 
 Requested by **@kecsap** in #299, as the follow-up offered when shipping #298.

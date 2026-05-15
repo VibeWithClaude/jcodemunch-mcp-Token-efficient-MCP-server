@@ -758,43 +758,43 @@ def _build_tools_list() -> list[Tool]:
         ),
         Tool(
             name="index_folder",
-            description="Index a local folder containing source code. Response includes `discovery_skip_counts` (files filtered per reason), `no_symbols_count`/`no_symbols_files` (files with no extractable symbols) for diagnosing missing files. Set JCODEMUNCH_USE_AI_SUMMARIES=false to disable AI summaries globally.",
+            description="Index a local folder of source code. Response surfaces `discovery_skip_counts` and `no_symbols_files` for diagnosing missing files.",
             inputSchema={
                 "type": "object",
                 "properties": {
                     "path": {
                         "type": "string",
-                        "description": "Path to local folder (absolute or relative, supports ~ for home directory)"
+                        "description": "Path to local folder (absolute or relative; ~ expands)."
                     },
                     "use_ai_summaries": {
                         "type": "boolean",
-                        "description": "Use AI to generate symbol summaries. Supports Anthropic, Gemini, OpenAI-compatible endpoints, MiniMax, and GLM-5 via env vars. When false, uses docstrings or signature fallback.",
+                        "description": "Generate symbol summaries via AI. When false, falls back to docstrings or signature.",
                         "default": True
                     },
                     "extra_ignore_patterns": {
                         "type": "array",
                         "items": {"type": "string"},
-                        "description": "Additional gitignore-style patterns to exclude from indexing (merged with JCODEMUNCH_EXTRA_IGNORE_PATTERNS env var)"
+                        "description": "Additional gitignore-style exclude patterns."
                     },
                     "follow_symlinks": {
                         "type": "boolean",
-                        "description": "Whether to include symlinked files in indexing. Symlinked directories are never followed (prevents infinite loops from circular symlinks). Default false for security.",
+                        "description": "Include symlinked files. Symlinked directories are never followed.",
                         "default": False
                     },
                     "incremental": {
                         "type": "boolean",
-                        "description": "When true and an existing index exists, only re-index changed files.",
+                        "description": "When an existing index exists, only re-index changed files.",
                         "default": True
                     },
                     "paths": {
                         "type": "array",
                         "items": {"type": "string"},
-                        "description": "Optional list of explicit paths to index. When provided, the directory walk is skipped; only these files (and the contents of any directories in the list) are indexed. Entries may be absolute or relative to `path`. Useful for batch-indexing exactly the files an agent already knows about — e.g. the source files git just touched, the changeset for a PR, or an rg / fd match list. Validation matches the walk path (outside-root, traversal, symlink-escape, oversize, unsupported-extension all warn-and-skip)."
+                        "description": "Optional explicit paths (absolute or relative to `path`). When set, skips the directory walk; directories in the list are recursed. Walk-path validation applies."
                     },
                     "identity_mode": {
                         "type": "string",
                         "enum": ["config", "local", "git"],
-                        "description": "How to derive the local-folder repo identity. Default config keeps local-first behavior unless an existing git-keyed index or config opts in. Use 'git' to opt in to git-root identity and monorepo subdir merging.",
+                        "description": "Repo-identity strategy. `config` (default): respect existing index. `local`: path-keyed. `git`: git-root-keyed (monorepo subdir merging).",
                         "default": "config"
                     }
                 },
@@ -833,17 +833,17 @@ def _build_tools_list() -> list[Tool]:
         ),
         Tool(
             name="index_file",
-            description="Index a single file within an existing index. Faster than index_folder for surgical updates after editing a file. The file must be within an already-indexed folder's source_root. Can also add new files not yet in the index.",
+            description="Index a single file within an existing index. Surgical update after edits. The file must be under an already-indexed folder's source_root. Can also add new files.",
             inputSchema={
                 "type": "object",
                 "properties": {
                     "path": {
                         "type": "string",
-                        "description": "Absolute path to the file to index"
+                        "description": "Absolute path to the file to index."
                     },
                     "use_ai_summaries": {
                         "type": "boolean",
-                        "description": "Use AI to generate symbol summaries. Supports Anthropic, Gemini, OpenAI-compatible endpoints, MiniMax, and GLM-5 via env vars. When false, uses docstrings or signature fallback.",
+                        "description": "Generate symbol summaries via AI. When false, falls back to docstrings or signature.",
                         "default": True
                     },
                     "context_providers": {
